@@ -1,0 +1,278 @@
+\documentclass[a4paper, landscape]{article}
+
+% --- GEOMETRY & PAGE LAYOUT ---
+% Set landscape mode with very small margins to maximize space
+\usepackage[a4paper, landscape, top=1cm, bottom=1cm, left=0.75cm, right=0.75cm]{geometry}
+
+% --- FONT & LANGUAGE (BABEL) ---
+% Use fontspec for modern font handling (requires XeLaTeX/LuaLaTeX)
+\usepackage{iftex}
+% Use Unicode font features only for XeTeX or LuaTeX; fall back to pdfLaTeX safe fonts otherwise
+\ifPDFTeX
+  % Fallback for pdfLaTeX (no fontspec)
+  \usepackage[T1]{fontenc}
+  \usepackage[english]{babel}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  % Use babel for language settings (only with Unicode engines)
+  \usepackage[english, bidi=basic, provide=*]{babel}
+  \babelprovide[import, onchar=ids fonts]{english}
+  % Prefer Noto Sans if available, otherwise fallback to Latin Modern or system fonts
+  \IfFontExistsTF{Noto Sans}{\setsansfont{Noto Sans}}{%
+    \IfFontExistsTF{Latin Modern Sans}{\setsansfont{Latin Modern Sans}}{\setsansfont{Arial}}%
+  }
+  \IfFontExistsTF{Noto Sans Mono}{\setmonofont{Noto Sans Mono}}{%
+    \IfFontExistsTF{Latin Modern Mono}{\setmonofont{Latin Modern Mono}}{\setmonofont{Courier New}}%
+  }
+  % Use sans-serif as the default family for compact layout
+  \renewcommand{\familydefault}{\sfdefault}
+  \usepackage{unicode-math}
+  \setmathfont[Scale=0.5]{STIX Two Math} % 可改 0.92~1.00
+\fi
+
+% --- PACKAGES ---
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{multicol}      % For columns
+\usepackage{amsmath}       % For math
+\ifPDFTeX
+  \usepackage{amssymb} % only for pdfLaTeX
+\fi     % For math symbols (like \rightarrow)
+
+\usepackage{booktabs}      % For the new table
+\usepackage{parskip}       % To control paragraph spacing
+\setlength{\parskip}{1pt}  % Minimal spacing between paragraphs
+\setlength{\parindent}{0pt} % No paragraph indentation
+\usepackage[dvipsnames]{xcolor} % Added for coloring
+\DeclareMathSizes{5}{6}{4.5}{3.5}
+% --- CUSTOM COMMANDS FOR COMPACT LAYOUT ---
+% Command for main topics, adds a small vertical break
+\newcommand{\topic}[1]{\par\medskip\textbf{#1}\par}
+% Command for subtopics
+\newcommand{\subtopic}[1]{\par\textbf{#1}}
+% Command for code/keywords
+\newcommand{\code}[1]{\texttt{#1}}
+% Command for math
+\newcommand{\mathsym}[1]{$#1$}
+\newcommand{\smallsum}{\mathop{\scalebox{0.65}{$\sum$}}\nolimits}
+
+% --- APPLY STYLING ---
+\definecolor{highlightcolor}{gray}{0.9} % Light gray for highlight
+\renewcommand{\topic}[1]{\par\medskip\noindent\colorbox{highlightcolor}{\parbox{\dimexpr\columnwidth-2\fboxsep\relax}{\textbf{#1}}}\par}
+\renewcommand{\subtopic}[1]{\par\textbf{\color{blue}{#1}}} % Blue for subtitles
+
+% --- DOCUMENT ---
+\begin{document}
+% Remove all page numbering, headers, and footers
+\pagestyle{empty}
+
+% Set font to 5pt with 6pt line spacing (leading)
+% This is extremely small, as requested.
+\fontsize{6}{6}\selectfont
+
+% Begin the 5-column layout
+\begin{multicols}{4}
+
+% --- COLUMN 1 ---
+
+\topic{1. Martingale Basics}
+\subtopic{Definition:} A martingale is a real-valued stochastic process satisfying: \\
+(i) $\mathbb E[\;|X_n|\;]<+\infty\;(\forall n)$\\
+(ii) $\mathbb E[X_{n+1}\;|\;X_1,X_2,...,X_n]=X_n\;(\forall n)$\\
+* $(X_n)_{n\geq1}$ may not be Markov. MG requires
+$\mathbb E[X_{n+1}\;|\;X_1,...,X_n]=X_n$ conditional means; But MC requires $\mathbb P (X_{n+1}\in A|\;X_1,...,X_n)$ conditional distribution.
+
+\subtopic{Example:SRW} Let $X_n=\smallsum_{i=1}^{n} \varepsilon_i$, where $\varepsilon_i\overset{iid}{\sim}\pm 1\;w.p.\frac12$\\
+$\mathbb E[|X_n|]\leq \smallsum \mathbb E[|\varepsilon_i|]\leq n$ \& $\mathbb E[X_{n+1}\;|\;X_1,...,X_n]=X_n$\\
+\textbf{More Generally:} Partial sum of iid r.v.s with $\mathbb E(\cdot)=0$ and integrable, the sum is a MG. i.e.:\\
+If $X_n=\smallsum_{i=1}^{n}Y_i$, $Y_i$ are iid r.v.s where $\mathbb E[|Y_i|]<\infty$ and $\mathbb E[Y_i]=0$, then $X_n$ is a MG. 
+
+\subtopic{Example: $M_n=X_n^2-n$} Let $(X_n)_{n\ge0}$ be a 1D-SRW. Let $M_n=X_n^2-n$. (We want to study $(X_n^2)$, but this process is not a MG) Since we notice that $\mathbb E[X_{n+1}^2|\mathcal{F}_n]=\mathbb E[(X_n+\varepsilon_{i+1})^2|\mathcal{F}_n]=X_n^2+1$ with draft term $1$ for one step forward. So $n$ steps moving forward $n$, we consider to minus this $n$. So consider $M_n=X_n^2-n$: And $M_n$ is a MG.
+
+\subtopic{Fact:} For $0\leq m< n$, $\mathbb E[X_n | \mathcal F_n]=X_m$ if $(X_n)$ is a MG.\\
+Proof:  $\mathbb E[X_{n+2} | \mathcal F_n]=\mathbb E\{\mathbb E[X_{n+2}|X_0,...X_{n+1}]\;|X_0,...X_n\}]=X_n$. Then apply induction get results. \\
+And if we take $m=0$, then $\mathbb E[X_n]=\mathbb E[X_0]$
+
+\subtopic{Key Question in MG:} $\mathbb E[X_T]\overset{?}{=}\mathbb E[X_0]$ For some fixed n, if $(X_n)$ is a MG, we know $\mathbb E[X_n]=\mathbb E[X_0]$, but for some r.v.$T$, that may depend on the process $(X_n)$, this \textbf{can not be true in general}.
+
+\topic{Stopping Time}
+\subtopic{Definition}:\\
+A non-negative integer r.v. T is a stopping time, if the event $\{T=n\}$ is determined by $X_0,X_1,...,X_n$ for any $n=0,1,2,...$. i.e. measurable in $\mathcal F_n$\\
+This can be extend to cts-time process, where we require $\{T\leq t\}$ is determined by $(X_s)_{0\leq s\leq t}$ for any $t\geq 0$.
+
+\subtopic{Examples of Stopping times}:
+\par 1. Any deterministic time.
+\par 2. Hitting times, e.g.:
+\begin{itemize}
+    \item $T=\inf \{t\geq0:X_t=x\}$ First hitting time;
+    \item $T=\inf \{t\geq0:X_t\in A\}$;
+    \item $T=\inf \{t\geq0:|X_t|= c\}$ First cross time;
+    \item $T=T_i^{(k)}$, $k$-th visiting time to $i$;
+\end{itemize}
+\par 3. $T=\inf\{t\geq2:X_{t-2}=5\}$; (this $=T_5+2$)
+
+\subtopic{Some Operations:}  Suppose $T_1,T_2$ are both stopping times (Suppose $T_1 \geq T_2$), the following:
+\begin{itemize}
+    \item $\min(T_1,T_2)$ is a stopping time;
+    \item $\max(T_1,T_2)$ is a stopping time;    
+    \item $T_1+T_2$ is a stopping time;
+    \item $T_1\times T_2$ is a stopping time (only for discrete); 
+    \item $T_1-T_2$ is NOT a stopping time: $\{T_1-T_2\leq n\}=\{T_1\leq T_2+ n\}$ possible not $\mathcal F_n$ measurable.
+\end{itemize}
+
+\subtopic{Why stopping time matters}:\\
+Recall in MC, we have 'Strong Markov Property': If $(X_n)_{n\geq0}$ is a DTMC, $T$ is a stopping time, conditionally on $T=t$, $X_0,X_1,...,X_t$, Then $(X_n)_{n\geq T}$ is a fresh new MC starting from $X_t=x_t$.\\
+Why this: In MC we have strong MCproperty, in MG we have similar one (optional stopping), but we must very carefully.
+
+\subtopic{Another Counter-Example}: Given $(X_t)_{t\geq0}$ is a MG, T is a stopping time, is $\mathbb E[X_T]=\mathbb E[X_0]$? \textbf{NOT ALWAYS!}\\
+- If $(X_t)_{t\geq0}$ is SRW, $T=\inf\{t\geq0:X_t=5\}$ is stopping time, $\mathbb P(T<\infty)=1$ by recurrence. But $5=\mathbb E[X_T]\neq\mathbb E[X_0]=0$\\
+The problem is: SRW is null recurrent $\mathbb E[T]=+\infty$, and the process can grow unboundedly before $T$, but we only have finite money.
+\vspace{6em}
+
+\topic{OSL,OST,OSC, and uniform bounded}
+\subtopic{Optional Stopping Lemma(OSL)}:\\
+If $(X_n)_{n\geq0}$ is a MG, $T$ is a stopping time, and satisfying $\mathbb P(T\leqslant m)=1$ for some deterministic constant $m$, Then $\mathbb E[X_T]=\mathbb E[X_0]$.\vspace{0.5em}\\
+Proof Idea: construct $\mathbb E[X_T]-\mathbb E[X_0]=\mathbb E[X_T-X_0]$ \\ 
+= $\mathbb E[\smallsum_{k=1}^T(X_k-X_{k-1})]$
+= $\mathbb E[\smallsum_{k=1}^m(X_k-X_{k-1})\cdot 1_{k\leqslant T}]$\\
+Details see proof side.\vspace{0.5em}\\
+Relaxing the boundness condition on $T$:\\
+If we replace $m$ with $+\infty$ in OSL, we then get OST under condition $\smallsum_{k=1}^{+\infty} \mathbb E[|X_k-X_{k-1}|\cdot 1(k\leqslant T)]$\\
+\subtopic{Optional Stopping Theorem(OST)}:\\
+If $(X_n)_{n\geq0}$ is a MG, $T$ is a stopping time with $\mathbb P(T<+\infty)=1$, and with condition:\\
+(i) $\mathbb E[|X_T|]<+\infty$\\
+ (ii) $\lim_{n\to\infty} \mathbb E[|X_n|\cdot1_{(T>n)}]=0$ (truncation error $\to$ 0), Then $\mathbb E[X_T]=\mathbb E[X_0]$.\vspace{0.5em}
+\subtopic{A useful Corollary}:\\
+Note that $\mathbb E[1_{(T>n)}]=\mathbb P(T>n)\to 0$, since we assume $\mathbb P(T<+\infty)=1$. Suppose if $|X_n|\leqslant c$ when $n \leqslant T$, i.e.$|X_n|$ bounded by $c$ by time T,\\ then $\mathbb E[|X_n|\cdot1_{T>n} ]\leqslant c\cdot\mathbb P(T>n)\to 0$
+\subtopic{Corollary (OSC)}:\\
+If $|X_n|$ is bounded by some constant c up to time T, with $\mathbb P(T<+\infty)=1$, Then $\mathbb E[X_T]=\mathbb E[X_0]$\vspace{0.5em}
+\subtopic{Application on Gambler's ruin}: $X_{n+1}=X_n+\varepsilon_{n+1}$
+\par $\cdot$ \textbf{Symmetric Case}: $\varepsilon_n \sim \pm1\;w.p. 1/2$; $X_0=a\in [0,C]$\\
+Easy to find $(X_n)_{n\geq0}$ is a MG, and $T$ is a stopping time. Since $|X_n|$ is bounded by $C$ up to time $T$, so apply OST:\\
+$c\cdot\mathbb P(X_T=c)+0\cdot\mathbb P(X_T=0)=\mathbb E[X_T]=\mathbb E[X_0]=a$\\
+$\implies P(X_T=c)=a/c$
+\par $\cdot$ \textbf{Asymmetric Case}: $\varepsilon_n :=+1\text{ with }p\;;-1 \text{ with }q=(1-p)$\\
+We could construct a MG: $Y_n=(\frac{1-p}{p})^{X_n}$, and $|Y_n|\leqslant\max\{1,(\frac{1-p}{p})^c\}$ up to time $T$. So by OST:\\
+$\mathbb E[Y_T]=\mathbb E[Y_0]=(\frac{1-p}{p})^a$, and $\mathbb E[Y_T]=(\frac{1-p}{p})^c\cdot\mathbb P(X_T=c)+1\cdot\mathbb P(X_T=0)$. Solve this could get $\mathbb P(X_T=c)$\vspace{0.5em}
+\subtopic{More: what about $\mathbb E[T]$}?
+\par $\cdot$ \textbf{Symmetric Case}: $p=\frac12, \;(X_n)_{n\geq0}$ is a MG.\\
+- Idea: Construct another MG that involves $n$: $Y_n=X_n^2-n$\\
+It is a MG: $\mathbb E[Y_{n+1}|\mathcal F_n]=\mathbb E[(X_n+\varepsilon_{n+1})^2-(n+1)\;|\;\mathcal F_n]=X_n^2-n=Y_n$ Then show OST to get $\mathbb E[Y_T]=\mathbb E[Y_0]$\\
+Suppose we could use OST, then:\\
+$a^2=\mathbb E[Y_0]=\mathbb E[Y_T]=\mathbb E[X_T^2]-\mathbb E[T]$\\
+And $\mathbb E[X_T^2]=c^2\mathbb P(X_T=c)+0\cdot\mathbb P(X_T=0)=a\cdot c$\\
+Therefore $\mathbb E[T]=ac-a^2=a(c-a)$
+\par $\cdot$ \textbf{Asymmetric Case}: $p\neq\frac12, \;(X_n)_{n\geq0}$ is a MG.\\
+- Idea: Construct another MG: $Y_n=X_n-(2p-1)n$\\
+varify OST: $\mathbb E[|Y_n|\cdot1_{T>n}]\leqslant(c+(2p-1)n)\cdot\mathbb P(T>n)\to 0$\\
+and: $\mathbb E[|Y_T|]\leqslant\mathbb E[c+(2p-1)T]<+\infty$\\
+So by OST: $0=\mathbb E[Y_0]=\mathbb E[Y_T]=\mathbb E[X_T]-(2p-1)\mathbb E[T]$
+$\boxed{\text{Remember check OST conditions for }\mathbb E[X_T]=\mathbb E[X_0] }.$
+\topic{Uniform Integrable}
+In OST we often need to verify $\mathbb E[|X_n|\cdot1_{A_n}]\to 0$, with $A_n=\{T>n\}$ By DCT, $\mathbb E[|X_n|\cdot1_{A_n}]\to 0$ as long as $\mathbb E[|X_n|]<\infty$. But this sometimes difficult to check.
+\subtopic{cf: integrability}: r.v. $X$ is integrable if $\lim_{k\to\infty}\mathbb E[|X| \cdot 1_{|X|>k}]=0$ 
+i.e. $\forall\varepsilon>0,\exists k>0,s.t.\mathbb E[|X| \cdot 1_{|X|>k}]<\varepsilon$
+\subtopic{Uniform Integrability (u.i.)}: For a collection of r.v.s $(X_n)_{n\geqslant 0}$, and $\mathbb E[|X_n|]<\infty\;\forall n$, we call them u.i. if: \\
+$\forall\varepsilon>0,\exists k<\infty,s.t.\forall n\;,\mathbb E[|X_n| \cdot 1_{|X_n|>k}]<\varepsilon$ have same $k$ that works for all n.
+\subtopic{Revised OST(u.i.)}:\\
+Let $(X_n)_{n\geqslant0}$ be uniform intergrable MG, and stopping time $T$ satisfies: $(i)\;T<+\infty\;(a.s)$, and $(ii)\;\mathbb E[|X_T|]<+\infty$, then we have $\mathbb E[|X_n|\cdot1_{T>n}]\to 0$, \\and therefore: $\mathbb E[X_T]=\mathbb E[X_0]\qquad$ (pf see pf.slides)\\
+\subtopic{An example of u.i.}:\\
+Let $X_n=\smallsum_{j=1}^{n}\frac{1}{j}z_j\;,z_j\sim\pm1\;w.p.1/2$. Then $\mathbb E[X_n^2]=\smallsum_{j=1}^n\frac{1}{j^2}\leqslant\smallsum_{j=1}^{+\infty}\frac{1}{j^2}=\frac{\pi^2}{6}<+\infty$. So $(X_n)$ is u.i.
+\subtopic{Equivalence U.I.}: Suppose $\exists\;C<+\infty,\;s.t.\; \mathbb E[|X_n|^2]\leqslant C\quad \text{for }\forall n$, Then $(X_n)_{n\geqslant0}$ is U.I.\\
+\textbf{Proof}: $\mathbb E[|X_n|1_{|X_n|\geqslant k}]\leqslant\sqrt{\mathbb E[X_n^2]}\cdot\sqrt{\mathbb P(|X_n|\geqslant k)}$\\
+$\leqslant\sqrt{C\cdot\mathbb P(|X_n|\geqslant k)}\leqslant\sqrt{C\cdot\frac{\mathbb E[X_n^2]}{k^2}}\leqslant\frac CK$.\\
+So for $\varepsilon>0$, we can take $K=\frac{C}{\varepsilon}$
+\\
+\textbf{NOTE:} only uniformly bounded first moment is not enough for u.i. In general, if we have $\sup_{n\geqslant1}\mathbb E[|X_n|^{1+\varepsilon}]\leqslant c<+\infty$ this implies u.i.\\
+\textbf{Non-Example:}Let $(Z_n)_{n\geqslant0}$ be 1D symmetric SRW. $T$ is hitting time of $-1$, and $X_n:=1+Z_{T\land n}=1+Z_n(n\leqslant T)\; \&\;=1+Z_T=0(n>T)$. Then $\mathbb E[|X_n|]=\mathbb E[X_n]=1+\mathbb E[Z_{n \land T}]=1+0\;(\text{by OSL})<\infty$. But $(X_n)_{n\geqslant0}$ is not U.I.
+\subtopic{Wald Identity}: Let $X_n=\smallsum_{j=1}^nz_j$, where $z_j$'s are $iid$ with $\mathbb E[|z_j|]<+\infty$. Let $m=\mathbb E[z_1]$, Then $Y_n=X_n-nm$ is MG.
+\subtopic{Wald Theorem}: If $T$ is a stopping time satisfying $\mathbb E[T]<+\infty$, we have $\mathbb E[X_T]=m\cdot\mathbb E[T]$\\
+Proof: important! see proof slides.\vspace{0.5em}\\
+\textbf{}
+%---------------------
+\topic{Doob's Theorem}
+\subtopic{Recall Markov inequality}: Let $X$ be a non-negative r.v. $\forall \lambda>0, \;\mathbb P(X\geqslant\lambda)\leqslant\frac{\mathbb E[X]}{\lambda}$
+\subtopic{Markov inequality in MG}: \\
+For a sequence $(X_n)_{n\geqslant0}$ is a non-negative MG, \\
+Then $\forall \lambda>0, \;\mathbb P(X_n\geqslant\lambda)\leqslant\frac{\mathbb E[X_n]}{\lambda}=\frac{\mathbb E[X_0]}{\lambda}$ 
+\subtopic{Doob's Maximum Inequality}:
+\[
+\mathbb P(\max_{1\leqslant t \leqslant n}X_t\geqslant \lambda)\leqslant\frac{\mathbb E[X_0]}{\lambda}
+\]
+\textbf{Note}:argmax is not a stopping time, but first time $\geqslant\lambda$ is.\\
+Proof: Let $T:=\inf\{t\geqslant1:X_t\geqslant\lambda\}$, $\mathbb P(\max_{1\leqslant t \leqslant n}X_t\geqslant \lambda)=\mathbb P(T\leqslant n)$. Then by OSL:$\mathbb E[X_0]=\mathbb E[X_{T\land n}]$\\
+$=\mathbb P(T>n)\cdot\mathbb E[X_{T\land n}|T>n]+\mathbb P(T\leqslant n)\cdot\mathbb E[X_{T\land n}|T\leqslant n]$\\
+$\geqslant \mathbb P(T\leqslant n)\cdot\mathbb E[X_{T\land n}|T\leqslant n]$\\
+On the event $T\leqslant n$, we have $X_T\geqslant \lambda$ a.s., therefore $\mathbb E[X_T|T \leqslant n]\geqslant\lambda$. So we have: $\mathbb E[X_0]=\mathbb E[X_{T\land n}]\geqslant\lambda\cdot \mathbb P(T\leqslant n)$. So $\mathbb P(T\leqslant n)\leqslant\frac{\mathbb E[X_0]}{\lambda}$.
+
+\topic{MG Convergence}
+Recall: MC convergence: $X_n \overset{d}\to \pi$. In MG convergence, we want to show: $X_n \overset{a.s.}\to X_\infty$ i.e. $\mathbb P(X_n \to X_\infty)=1$
+\subtopic{Example: Gambler's Ruin}: $(X_n)_{n\geqslant0}$, $X_0=a$, $T:=$ hitting time of {$0,c$}, $(X_{T\land n})_{n\geqslant0}$
+ is a MG. From previous discussion, we know: $\mathbb P(\lim_{n\to \infty}X_{n\land T}=X_T)=1$, and the limiting r.v. is: $:=c,\;w.p.\frac ac$, and $:=0,\;w.p.1-\frac ac$.
+ \subtopic{Example}: $\smallsum_{j=1}^{+\infty}j^{-1}z_j$, where $z_j\overset{iid}{\sim}\pm1\;w.p.1/2$. If $z_1=z_2=\cdots=z_n=1$, then diverge. But this happens $w.p.\;0$. We'll show $(X_n)_{n\geqslant0}$ converge a.s.
+
+ \subtopic{Theorem: MG Convergence}: Suppose $(X_n)_{n\geqslant0}$ is MG,\\
+ If $\exists \;c<+\infty,$ s.t. $\mathbb E[|X_n|]\leqslant c\quad \forall\;n$ (strictly weaker than u.i), Then $\exists$ a limiting r.v. $X_\infty$, s.t. $\mathbb P(X_n\to X_\infty)=1$.\vspace{0.5em}\\
+ \textbf{E.g:} random harmonic series converges.\\
+ \subtopic{Corollary}: Suppose $(X_n)_{n\geqslant0}$ is MG, $X_n\geqslant-a\;(a.s)\;\forall n$ for some constant $a$. Then $X_n \to X_\infty$ a.s.\vspace{0.5em}\\
+ Proof: $\mathbb E[|X_n|]\leqslant|a|+\mathbb E[|X_n+a|]=|a|+\mathbb E[X_n+a]\leqslant2|a|+\mathbb E[|X_0|]<\infty$
+ \subtopic{Upcrossing Theorem}: Proof of MG convergence theorem.see Proof slide.
+ \subtopic{Is $\mathbb E[X_\infty]=\mathbb E[X_0]$?} NOT always!\\
+ \textbf{Counter Example}:Let $X_0=1$,$X_n=X_{n-1}+\varepsilon_n$, $\varepsilon_n\sim\pm1\;w.p.1/2$ Let $Y_n=X_{n \land T}$, T is hitting time  of 0. Then $(Y_n)$ is a MG, and $\mathbb E[Y_n|]=\mathbb E[Y_0]=1<\infty$. By MG convergence, $Y_n\to Y_\infty$. Indeed, since $(X_n)$ is irreducible recuurent MC,$\mathbb P(T<\infty)=1$, so $Y_n\to 0$.
+ \subtopic{Theorem: Uniform Convergence}: Suppose $(X_n)_{n\geqslant0}$ is U.I., $X_n \overset{a.s.}{\to} X_\infty$, Then we have $\mathbb E|X_n-X_\infty|\to0$\\
+ \textbf{And in MG convergence}: this get $\mathbb E[X_\infty]=\mathbb E[X_0]$\vspace{0.5em}\\
+ \textbf{This is important}:We get this powerful tool:\\
+ $(X_n) \text{ is U.I.} \equiv \sup_n \mathbb E[|X_n|\cdot1_{|X_n|>K}]\to 0$\\
+ - If $X_n\overset{a.s.}{\to} X_\infty$, and $(X_n)$ is U.I. Then $X_n\to X_\infty$ in $L^1$. \\
+ - Further, if $(X_n)$ is MG, then $\mathbb E[X_n]=\mathbb E[X_0]$, and $\mathbb E[X_\infty]=\lim_n\mathbb= E[X_n]=\mathbb E[X_0]$\\
+ \subtopic{Random Harmonic Series}: $M_n=\smallsum_{j=1}^{n}\frac1jX_j$, where $X_j\pm1\;w.p.1/2$. U.I. MG $\implies M_n\overset{a.s \text{ in }L^1}{\to} M_\infty$.
+ \subtopic{Polya's Urn}: Let $M_n=$ proportion of red. For each time, add a new ball is red $w.p. M_n$; is blue $w.p.(1-M_n)$. $(M_n)$is a MG. and $M_n\in[0,1] a.s.$, so U.I. $M_n\to M_\infty$ 
+ \subtopic{Connection between OST and MG convergence}: Let $(X_n)$ be U.I. MG, $T$ is a stopping time. \textcolor{blue}{T does not to be finite w.p.1}. We could construct $(Y_n)=X_{n \land T}$ for $n\geqslant0$, and $(Y_n)$ is also a MG.\\
+ \textbf{Claim:}$(Y_n)$ is U.I., so $Y_n\to Y_\infty=X_T$. By $L^1$ convergence, we have $\mathbb E[X_T]=\mathbb E[Y_n]=\mathbb E[Y_0]=\mathbb E[X_0]$
+ \topic{$L^p$ Convergence}
+ \subtopic{Doob's $L^p$ maximum inequality}: Let $(X_n)_{n\geqslant0}$ be a MG.\\
+$ \mathbb P(\max_{0\leqslant t\leqslant n}|X_t|\geqslant a)\leqslant\frac{\mathbb E[|X_n|^P]}{a^P}$\\
+ Integrating the tail bound,\\
+$\mathbb E(\max_{0\leqslant t\leqslant n}|X_t|^P)\leqslant\frac{P}{P-1}\mathbb E[|X_n|^P]\leqslant C\leqslant \infty$
+\subtopic{Doob's MG}: Let X be a r.v. with $\mathbb E[|X|]<\infty$, and a filtration $F_1\in F2....$ For $M_n=\mathbb E[X|F_n]$, $(M_n)$ is a MG.\\
+\textbf{Fact:} $(M_n)$ is U.I.so apply convergence.
+
+\subtopic{Application in Statistics.}
+Suppose \(\theta\sim \pi\) (prior distribution), and
+\(X_1,X_2,\ldots,X_n,\ldots\mid \theta \overset{\text{iid}}{\sim} P_\theta.\)
+
+Then the posterior distribution is
+\(\pi(\theta\mid X_1,\ldots,X_n)
+=
+\dfrac{\pi(\theta)\,p_\theta(X_1)\cdots p_\theta(X_n)}
+{\int \pi(\theta)\,p_\theta(X_1)\cdots p_\theta(X_n)\,d\theta}.\)
+
+The goal is to estimate \(g(\theta)\in\mathbb{R}.\)
+
+Define
+\(\hat g_n=\mathbb{E}[g(\theta)\mid X_1,\ldots,X_n].\)
+This is Doob's martingale.
+
+Take \(X=g(\theta)\) and \(\mathcal{F}_n=\sigma(X_1,X_2,\ldots,X_n).\) Then
+\(\hat g_n \xrightarrow[\ ]{\text{a.s.},\,L^1} g_\infty
+=
+\mathbb{E}[g(\theta)\mid X_1,X_2,\ldots].\)
+
+Doob (1949) shows that as long as the model is identifiable, we have
+\(g_\infty=g(\theta).\)
+
+Indeed, Pólya's urn model is equivalent to estimating \(\theta\) in \(\operatorname{Ber}(\theta)\)
+with iid data, where \(\theta\sim \pi=\operatorname{Beta}(\alpha,\beta).\)
+
+
+ 
+%-------------------------
+
+
+
+
+% ----------------------------------------------------
+
+\end{multicols}
+\end{document}
