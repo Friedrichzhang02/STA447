@@ -1,0 +1,941 @@
+\documentclass[a4paper, landscape]{article}
+
+% --- GEOMETRY & PAGE LAYOUT ---
+% Set landscape mode with very small margins to maximize space
+\usepackage[a4paper, landscape, top=1cm, bottom=1cm, left=0.75cm, right=0.75cm]{geometry}
+
+% --- FONT & LANGUAGE (BABEL) ---
+% Use fontspec for modern font handling (requires XeLaTeX/LuaLaTeX)
+\usepackage{iftex}
+% Use Unicode font features only for XeTeX or LuaTeX; fall back to pdfLaTeX safe fonts otherwise
+\ifPDFTeX
+  % Fallback for pdfLaTeX (no fontspec)
+  \usepackage[T1]{fontenc}
+  \usepackage[english]{babel}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  % Use babel for language settings (only with Unicode engines)
+  \usepackage[english, bidi=basic, provide=*]{babel}
+  \babelprovide[import, onchar=ids fonts]{english}
+  % Prefer Noto Sans if available, otherwise fallback to Latin Modern or system fonts
+  \IfFontExistsTF{Noto Sans}{\setsansfont{Noto Sans}}{%
+    \IfFontExistsTF{Latin Modern Sans}{\setsansfont{Latin Modern Sans}}{\setsansfont{Arial}}%
+  }
+  \IfFontExistsTF{Noto Sans Mono}{\setmonofont{Noto Sans Mono}}{%
+    \IfFontExistsTF{Latin Modern Mono}{\setmonofont{Latin Modern Mono}}{\setmonofont{Courier New}}%
+  }
+  % Use sans-serif as the default family for compact layout
+  \renewcommand{\familydefault}{\sfdefault}
+  \usepackage{unicode-math}
+  \setmathfont[Scale=0.5]{STIX Two Math} % 可改 0.92~1.00
+\fi
+
+% --- PACKAGES ---
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{multicol}      % For columns
+\usepackage{amsmath}       % For math
+\ifPDFTeX
+  \usepackage{amssymb} % only for pdfLaTeX
+\fi     % For math symbols (like \rightarrow)
+
+\usepackage{booktabs}      % For the new table
+\usepackage{parskip}       % To control paragraph spacing
+\setlength{\parskip}{1pt}  % Minimal spacing between paragraphs
+\setlength{\parindent}{0pt} % No paragraph indentation
+\usepackage[dvipsnames]{xcolor} % Added for coloring
+\DeclareMathSizes{5}{6}{4.5}{3.5}
+% --- CUSTOM COMMANDS FOR COMPACT LAYOUT ---
+% Command for main topics, adds a small vertical break
+\newcommand{\topic}[1]{\par\medskip\textbf{#1}\par}
+% Command for subtopics
+\newcommand{\subtopic}[1]{\par\textbf{#1}}
+% Command for code/keywords
+\newcommand{\code}[1]{\texttt{#1}}
+% Command for math
+\newcommand{\mathsym}[1]{$#1$}
+\newcommand{\smallsum}{\mathop{\scalebox{0.65}{$\sum$}}\nolimits}
+
+% --- APPLY STYLING ---
+\definecolor{highlightcolor}{gray}{0.9} % Light gray for highlight
+\renewcommand{\topic}[1]{\par\medskip\noindent\colorbox{highlightcolor}{\parbox{\dimexpr\columnwidth-2\fboxsep\relax}{\textbf{#1}}}\par}
+\renewcommand{\subtopic}[1]{\par\textbf{\color{blue}{#1}}} % Blue for subtitles
+
+% --- DOCUMENT ---
+\begin{document}
+% Remove all page numbering, headers, and footers
+\pagestyle{empty}
+
+% Set font to 5pt with 6pt line spacing (leading)
+% This is extremely small, as requested.
+\fontsize{6}{6}\selectfont
+
+% Begin the 5-column layout
+\begin{multicols}{4}
+
+% --- COLUMN 1 ---
+
+\topic{1. DT,DS, Time-Homogeneous MC}
+\subtopic{Definition:} A discrete-time, discrete-state, time-homogeneous Markov chain(DCMC) is a stochastic process
+$(X_0, X_1, X_2, \dots),$ \text{where $X_i \in S$ for all $i \ge 0$, satisfying the following conditions:}
+\par (1). The state space $S$ (finite or countably infinite).
+\par (2). The initial distribution $(\nu_i)_{i\in S}$ satisfies: $X_0 \sim V$ with $\mathbb P(X_0 = i) = \nu_i,\quad i \in S$.
+\par (3). The transition probabilities $P = (p_{ij})_{i,j\in S}$, where $ p_{ij} = \mathbb P(X_{t+1} = j \mid X_t = i), \qquad i,j \in S $.
+
+\subtopic{Non-Example} For S= $\mathbb Z$; $X_0=0, X_{t+1}=X_t+\epsilon_{t+1}$, where $\epsilon_{t+1}\sim Bernouli(p_t),$ and $p_t=\frac{\#\text{ 'up' move within [0,t]+1}}{t+2}$\\
+Here $(X_t)_{t\geq0}$ is not a MC! Because transition probability changes with time t, so it is time-inhomogeneous. \\
+But $(X_t, p_t)_{t\geq0}$ is a MC, it is a binary tuple on $S =\mathbb Z \land(\mathbb Q \cap(0,1))$ 
+
+\subtopic{Markov-Property} Let $\{X_t\}_{t\ge0}$ be a MC with transition matrix $P=(p_{ij})$. For any states $i_0,i_1,\dots,i_{t-1},j \in S$,\\
+$\mathbb P(X_t=j \mid X_1=i_1, \dots, X_{t-1}=i_{t-1})
+=\mathbb P(X_t=j \mid X_{t-1}=i_{t-1})
+=p_{i_{t-1}j}.$\\
+\textbf{Collary}:
+\par 1. $\mathbb P(X_0=i_0, \dots, X_n=i_n) =\nu_{i_0}\cdot p_{i_0 i_1}{\cdots} p_{i_{n-1} i_n}$.
+\par 2. $\mathbb P(X_0=i_0, X_2=i_2)= \nu_{i_0}\smallsum_{i_1\in S} p_{i_0 i_1} p_{i_1 i_2}$
+\par 3. $\mathbb P(X_2=j \mid X_0=i)=\smallsum_{k \in S} \mathbb P(X_2=j, X_1=k \mid X=i) =\smallsum_{k \in S} p_{ik}p_{kj} $.
+When |S|<$+\infty$, $\mathbb P(X_2=j \mid X_0=i)=(P^2)_{i j}$
+
+\subtopic{Infinite-dimensional matrices}
+Let $A=(a_{ik})_{i,k\in S}$ and $B=(b_{kj})_{k,j\in S}$ be matrices indexed by a
+countable state space $S$.
+Their product is defined by
+$(AB)_{ij} = \smallsum_{k\in S} a_{ik} b_{kj}$.
+In general, the infinite sum may fail to converge.
+However, convergence is guaranteed when $A$ and $B$ are
+probability transition matrices.
+
+\subtopic{$n$-step transition probabilities} In general:\\
+$\mathbb P(X_n=j \mid X_0=i):=p^{(n)}_{ij}=[P^{(n)}]_{ij}.$\\
+$\mathbb P(X_n=j):=\smallsum_{i\in S}\nu_i (P^{n})_{ij} = [\nu P^n]_{j}.$
+\subtopic{Chapman--Kolmogorov equations}\\ 
+$p^{(m+n)}_{ij}=
+[P^{m+n}]_{ij}=
+[P^m\cdot P^n]_{ij}=
+\smallsum_{k\in S} p^{(m)}_{ik}\, p^{(n)}_{kj}$.\\
+$p^{(m+s+n)}_{ij}=
+\smallsum_{k\in S}\smallsum_{l\in S} p^{(m)}_{ik}\, p^{(s)}_{kl}p^{(n)}_{lj}$.\\
+$p^{(m+n)}_{ij}\geq p^{(m)}_{ik}p^{(n)}_{kj};\;\; p^{(m+s+n)}_{ij}\geq p^{(m)}_{ik}p^{(s)}_{kl}p^{(n)}_{lj}$
+
+\topic{2.Long Behavior of Markov Chain}
+\subtopic{Number of visits} For a state $i\in S$, define:\\
+$N(i):=\smallsum_{t=1}^{\infty} \mathbf{1}_{\{X_t=i\}}$,
+the total number of times the Markov chain visits state $i$.
+Note that $N(i)$ may be infinite.
+
+\subtopic{Hitting probability} For $i,j\in S$, define:\\
+$f_{ij}:=\mathbb P(N(j)\ge1 \mid X_0=i)$, the probability that the chain ever reaches state $j$ when starting from state $i$.
+
+\subtopic{Hitting time} Fix a state $i\in S$. The (first) hitting time of $i$ is
+$\tau_i := \inf\{t\ge 1 : X_t=i\}$.
+
+\subtopic{k-th Hitting time} Define recursively
+$\tau_i^{(1)} := \tau_i, 
+\tau_i^{(k+1)} := \inf\{t>\tau_i^{(k)} : X_t=i\},
+\quad k\ge1$.
+
+\subtopic{Stopping time}(Informal) A r.v $\tau$ is a stopping time that means by time n we can tell whether $\tau$ has occurred or equivalent to n by only use $X_0,...,X_n$, that not depend on future.\\
+Hitting time, recurrent time are all stopping times.
+
+\subtopic{Strong Markov Property}
+Let $\tau$ be a stopping time. Once we stop at time $\tau$, the future chain like a fresh Markov chain starting from the current state $X_\tau$ (the past before $\tau$
+does not matter).
+In particular, for any $k\ge 0$ and any state $j$,
+\[
+\mathbb P(X_{\tau+k}=j \mid X_\tau=i)=\mathbb P_i(X_k=j).
+\]
+\textbf{Important}: When we meet hitting time, split and restart it.
+\par \textbf{1.First hit A or hit b?}\\
+Let $\tau_a= \text{inf}\{t:X_t=a\}$, $\tau_b= \text{inf}\{t:X_t=b\}$, want $h(x)=\mathbb P_x(\tau_a<\tau_b)$: (1). check boundary points h(a)=1, h(b)=0; (2)For other states $y\in S\textbackslash a,b$, $h(x)=\smallsum_y p_{xy}h(y)$ 
+\par \textbf{2.Expectation of Arrival time} $\mathbb E_i[T_j]$\\
+Define $T_j=\text{inf}\{t\geq0: X_t=j\}$. Firstly define m(x):=$\mathbb E_x[T_j]$, then we want m(i). (1).Boundary point m(j)=0; (2)if $x\neq j$,$m(x)=1+\smallsum_y p_{xy}m(y)$
+\par 3. When we see some stopping time $\tau$ and want to calculate some quantity after $\tau$, Then:(quantity from start)= $\smallsum_s \mathbb P(X_\tau=s)$*(some quantity starting from s)
+
+\topic{2.1 Recurrent and Transience}
+\subtopic{one state Recurrent \& Transience:}A state $i\in S$ is called
+\begin{itemize}
+    \item \emph{recurrent}, if $f_{ii}=1$; and$ N(i)=+\infty$ w.p.1
+    \item \emph{transient}, if $f_{ii}<1$; and$ N(i)\sim Geom(f_{ii})$ 
+\end{itemize}
+$f_{ii}$ is the probability of returning to i when starting from i.
+
+\subtopic{Fact:} $\mathbb P_i(N(i)\ge k) =\mathbb P(N(i)\ge k \;|X_0=i)= f_{ii}^k$\\
+\textbf{Proof:} \textbf{Base case ($k=1$).}
+By definition, $\mathbb P_i(N(i)\ge1)=f_{ii}$.\\
+\textbf{Induction step.} Assume $\mathbb P_i(N(i)\ge k)=f_{ii}^{\,k}$, Then for k+1, $\mathbb P_i(N(i)\ge k+1)=\mathbb P_i(N(i)\ge k)P_i(N(i)\ge k+1|N(i)\ge k)=f_{ii}^k\cdot P_i(N(i)\ge k+1|N(i)\ge k) = f_{ii}^k f_{ii}$ .
+
+\subtopic{Refresh Markov Chain:} $\mathbb P_i(N(i)\ge k+1|N(i)\ge k)= \mathbb P_i(N(i)\ge 1)= f_{ii}$
+
+\subtopic{Conclusion for $f_{ii}$:} For MC starting from i:
+\begin{itemize}
+    \item If $f_{ii}=1$, then $\mathbb P_i(N(i)=\infty)=1$. 
+    \item If $f_{ii}<1$, then $N(i)$ has a geometric distribution: $\mathbb P(N(i)=k)=f_{ii}^k(1-f_{ii})= f_{ii}^k-f_{ii}^{\,k+1}$, and $\mathbb E_i[N(i)]=\frac{f_{ii}}{1-f_{ii}}$
+\end{itemize}
+
+
+\subtopic{Fact for $f_{ij}$:} For $i,j\in S$,
+$\mathbb P_i(N(j)\ge k)=f_{ij}\, f_{jj}^{\,k-1}$, and:
+\begin{align*}
+    \mathbb E_i[N(j)]&= \mathbb P_i(\text{visit }j)\cdot (1+\mathbb E_j[N(j)])\\
+    &=f_{ij}\cdot(1+\frac{f_{jj}}{1-f_{jj}})=\frac{f_{ij}}{1-f_{jj}}
+\end{align*}
+with two corner cases:
+\par 1. If $f_{ij}=0$, then $\mathbb E_i [N(j)]=0$
+\par 2. If $f_{ij}>0, f_{jj}=1$ then $\mathbb E_i [N(j)]=+\infty$
+
+\subtopic{Recurrent State Theorem:} \\A state $i\in S$ is recurrent \textbf{if and only if} $\smallsum_{n=1}^{\infty} p^{(n)}_{ii} = \infty$.\\
+\textbf{Proof:}\\ $\smallsum_{n=1}^{\infty} p^{(n)}_{ii}=\smallsum_{n=1}^{\infty} \mathbb P_i(X_n=i)= \smallsum_{n=1}^{\infty} \mathbb E_i \mathbf{1}_{\{X_n=i\}}$.
+
+By Tonelli's theorem,
+
+$\smallsum_{n=1}^{\infty} \mathbb E_i [\mathbf{1}_{\{X_n=i\}}]
+=\mathbb E_i [\smallsum_{n=1}^{\infty} \mathbf{1}_{\{X_n=i\}}]=\mathbb E_i[N(i)]$.
+From the results in the previous section,
+
+$\mathbb E_i[N(i)]=\frac{f_{ii}}{1-f_{ii}},\text{ if } f_{ii}<1\;\text{;}\;\mathbb E_i[N(i)] =+\infty, \text{ if } f_{ii}=1.$\\
+Hence,
+$\smallsum_{n=1}^{+\infty} p^{(n)}_{ii} = +\infty
+\quad\Longleftrightarrow\quad
+f_{ii}=1.$
+
+\subtopic{1D SRW on $\mathbb Z$:}
+Let $(X_n)$ be a SRW defined by $X_0=0$ and 
+$X_{t+1}=X_t+\epsilon_{t+1}, \text{where } \epsilon_t=
+\begin{cases}
++1,& w.p. 1/2\\
+-1,& w.p. 1/2
+\end{cases}
+$\\
+$i.e. \qquad p_{i(i+1)}=p_{i(i-1)}=1/2; \; p_{ij}=0\;(\text{if |i-j|}\neq1)$\\
+\textbf{Question:}Whether state 0 is recurrent? It is sufficient to determine whether $\smallsum_{n=1}^{+\infty}p_{00}^{(n)}=\infty$.
+\par If $n$ is odd, then $p^{(n)}_{00}=0$; If $n$ is even, the total number of possible paths is $=2^n$ the number of paths returning to $0$ at time $n$ = $\binom{n}{n/2}$ = $\frac{n!}{((n/2)!)^2}$ (for $n/2$ steps go up and $n/2$ steps go down, with total n steps)
+Using Stirling's approximation: $ n!\simeq \sqrt{2\pi n}\cdot(\frac n e)^2$
+Therefore,
+$p_{00}^{(n)}=\binom{n}{n/2}=\frac{n!}{((n/2)!)^2} \simeq \sqrt{\frac2\pi}\cdot \frac{1}{\sqrt{n}}$.
+and thus$\smallsum_{n=1}^{\infty} p^{(n)}_{00} = \infty$ hence state $0$ is recurrent.
+
+\subtopic{$d$-D SRW on $\mathbb Z^d$:}
+State $X_n=(X_n^{(1)},\dots,X_n^{(d)})$, each coord is independent 1D SRW.\\
+Return prob:
+$p^{(n)}_{00}=\Bigl(2^{-n}{n\choose n/2}\Bigr)^d \sim n^{-d/2}.$\\
+So
+$\smallsum_{n=1}^{+\infty}p^{(n)}_{ii}
+=
+\smallsum_{n=1}^{+\infty}(\frac{c}{\sqrt n})^d=
+\begin{cases}
++\infty,& d=1,2\ \\
+<+\infty,& d\ge3\
+\end{cases}$
+
+\textbf{Mnemonic:} drunk man (1D/2D) eventually home; drunk bird (3D+) may not.
+
+\subtopic{biased SRW on $\mathbb Z$:} the MC has (+1) with $p$ and (-1) with $q=1-p$: The MC is irreducible, but all states are transient.\\
+\textbf{Intuition:} If $p>q$,the MC more likely move right to $+\infty$, and if $p<q$, the MC more likely move left to $-\infty$.\\
+Proof: First show one state is transient, usually state 0, with using Strong Markov to split and analysis. And use irreducible to generalize.
+
+
+\subtopic{Borel--Cantelli lemma:}
+Let $(En)_{n=1}^{+\infty}$ be a sequence of events. (finite or infinitely often) If $\smallsum_n \mathbb P(E_n)<+\infty$ then $\mathbb P((En)_{n=1}^{+\infty} \text{ happens only finitely often})=1$, i.e. $E_n$ occurs only finitely many times w.p.1.\\
+(Converse not true in general; but geometric tails $\Rightarrow$ finite mean etc.)
+
+
+\topic{4.1 $f$-Expansion}
+\subtopic{Hitting prob:}
+$f_{ij}:=\mathbb P_i(\text{ever visit }j)=\mathbb P_i(N(j)\ge1)$
+
+\subtopic{$f$-Expansion}
+\[
+f_{ij}=\smallsum_{k\in S}\mathbb P_i(X_1=k)\mathbb P_k(\text{ever hit }j)
+=p_{ij}+\smallsum_{k\neq j}p_{ik}f_{kj}.
+\]
+\textbf{Note:} If $|S|<+\infty$, f-expansion gives equations $|S|^2$ for $|S|^2$ variables, so it can solve out variables.
+
+
+\topic{4.2 Gambler's Ruin (hit $C$ before $0$)}
+\subtopic{Model:}
+$S=\{0,1,\dots,C\}$, start $X_0=a$ for $a\in [0,C]$.\\
+Let $X_t:=$ amount of money at time t.\\
+Goal $f_{aC}=\mathbb P_a(\text{ever hit }C)=\mathbb P_a(\tau_C<\tau_0)$.
+
+\subtopic{Boundary:}
+$f_{0C}=0,\quad f_{CC}=1$.
+
+\subtopic{Symmetric case $p=1/2$:} $p_{i,i+1}=p_{i,i-1}=1/2$\\
+Wining probability:
+\begin{align*}
+f_{iC}&=p_{iC}+\smallsum_{k\in S,\,k\neq C} p_{ik} f_{kC}
+=\smallsum_{k\in S}p_{ik}f_{kC} \text{ ,($f_{CC}=1$)}\\
+&=  
+\frac12 f_{(i+1)C} + \frac12 f_{(i-1)C} \qquad (1\le i\le C-1)
+\end{align*}
+This is equivalent: $f_{(i+1)C}-f_{iC} = f_{iC}-f_{(i-1)C}$\\
+Summing over i=1...C: \\
+$1=f_{CC}-f_{0C}=\smallsum_{i=1}^C(f_{iC}-f_{(i-1)C})=C(f_{1C}-f_{0C})$
+This implies the difference between  $f_{iC}-f_{(i-1)C}=1/C$, so:
+\[
+f_{aC}=\frac{a}{C},\qquad f_{a0}=1-\frac{a}{C}
+\]
+
+\subtopic{Biased case $p\neq 1/2$:} $p_{i,i-1}=p \qquad p_{i,i+1} = 1-p$
+f-expansion: $f_{iC}=p f_{i+1,C}+(1-p)f_{i-1,C}$\\
+Rearrange:
+$f_{i+1,C}-f_{iC}=\frac{1-p}{p}\bigl(f_{iC}-f_{i-1,C}\bigr)$\\
+Thus $1=f_{CC}-f_{0C}=\smallsum_{i=0}^{C-1}(f_{(i+1)C}-f_{iC})=(f_{1C}-f_{0C})\smallsum_{i=0}^{C-1}(\frac{1-p}{p})^i$, since $(f_{(i+1)C}-f_{iC})=(\frac{1-p}{p})^i(f_{1C}-f_{0C})$ and by first-difference is geometric. 
+\[
+f_{aC}=
+\frac{\left(\frac{1-p}{p}\right)^a-1}
+{\left(\frac{1-p}{p}\right)^C-1},
+\qquad
+f_{a0}=
+\frac{\left(\frac{1-p}{p}\right)^a-\left(\frac{1-p}{p}\right)^C}
+{\left(\frac{1-p}{p}\right)^C-1},
+\]
+
+\textbf when $p\neq 1/2$, ruin probability is exponentially small when $p>1/2$, and exponential close to 1 when $p <1/2$.
+
+\topic{5. Communication \& Irreducibility (structure facts)}
+\subtopic{Communication:}
+$i\to j$ if $f_{ij}>0$ \\
+$i\leftrightarrow j$ if $i\to j$ and $j\to i$.
+
+\subtopic{Irreducible:}
+A MC is irreducible if $\forall i,j\in S,\ i\leftrightarrow j$.
+
+\subtopic{Key consequence: same type in a class}
+
+\[
+\text{If } i\leftrightarrow j, \text{ then: }\quad
+i\text{ recurrent } \iff j\text{ recurrent.}
+\]
+
+\subtopic{Case theorem (irreducible dichotomy):}\\
+If MC irreducible, exactly one holds:
+\[
+\text{(i) all states recurrent}\quad\text{or}\quad\text{(ii) all states transient}.
+\]
+
+\subtopic{Sum lemma:}
+If $i\to k$ and $l\to j$, and $\smallsum_{n=1}^{+\infty}p^{(n)}_{kl}=+\infty$, then
+$\smallsum_{n=1}^{+\infty}p^{(n)}_{ij}=+\infty$.  \textbf{Proof:}\\
+Since $i\to k,\exists m>0, p_{ik}^{(m)}>0;l\to j,\exists r>0, p_{lj}^{(r)}>0.$\\Then by CK-Equation, $p_{ij}^{(m+n+r)}\geq p_{ik}^{(m)} p_{kl}^{(n)}p_{lj}^{(r)}$, and thus $\smallsum_{n=1}^{+\infty}p_{ij}^{(m+n+r)}\geq{p_{ik}^{(m)}}_{>0} {p_{kl}^{(n)}}_{>0} \smallsum_{n=1}^{+\infty}p_{lj}^{(r)}=+\infty$\\
+\textbf{Proof of recurrent equivalent:} Apply sum lemma, by set $j=i$ and $l=k$,then l is recurrent $\iff\smallsum_{n=1}^{+\infty}p_{ll}^{(n)}=+\infty$
+
+
+
+\topic{5.1 Recurrent vs Transient MC:$\smallsum_{n=1}^{+\infty} p^{(n)}_{ij},\; i\neq j$}
+\subtopic{Fact:} For an irreducible MC:
+\par $\textbf{Recurrent MC: }\smallsum_{n=1}^{+\infty}p^{(n)}_{ij}=+\infty,\ \forall i,j.$
+\par $\textbf{Transient MC: }\smallsum_{n=1}^{+\infty}p^{(n)}_{ij}<+\infty,\ \forall i,j.$
+
+
+\subtopic{Notation:}
+$\smallsum_{n=1}^{+\infty}p^{(n)}_{ij}=\mathbb E_i[\#\text{ visits to }j]=\mathbb E_i[N(j)]$.
+\textbf{Proof:} For recurrent MC: $\exists m, p_{ij}^{(m)}>0$ by irreducibility, $\mathbb E_i[N(j)]\geq p_{ij}^{(m)}\cdot \mathbb E_j[N(j)]=+\infty$; For transient MC:  $\mathbb E_i[N(j)]= f_{ij}\cdot (\mathbb E_j[N(j)]+1)=\frac{f_{ij}}{1-f_{jj}}<+\infty$
+
+\subtopic{Finite Space special case:}
+If MC is irreducible and $|S|<\infty$, then all states are recurrent.\\
+Proof: for any $i\in S$, $\smallsum_{j\in S}(\smallsum_{n=1}^{+\infty}p_{ij}^{(n)})=\smallsum_{n=1}^{+\infty} \smallsum_{j\in S} p_{ij}^{(n)}=\smallsum_{n=1}^{+\infty}1=+\infty$, and here $\exists j\in S$ s.t. $\smallsum_{n=1}^{+\infty}p_{ij}^{(n)}=\infty$.
+By irreducbility, implies MC is recurrent.
+
+\topic{6. Hit lemma $\Rightarrow$ $f$-lemma $\Rightarrow$ infinite returns}
+\subtopic{Hit lemma:}
+Let $H_{ij}:=\{MC \text{ hits }i\text{ before returning to }j\}.$ If $j\to i$, then $\mathbb P_j(H_{ij})>0$.
+
+\textbf{Idea:} from $j$ there’s positive chance hit $i$ before return; but “never return to $j$” has prob $0$ when $j$ recurrent $\Rightarrow$ once reach $i$ you must visit $j$ eventually.
+
+\subtopic{$f$-lemma:}
+If $j\to i$ and $f_{jj}=1$ (j recurrent), then $f_{ij}=1$.
+
+\subtopic{Infinite returns lemma (irreducible):}
+\begin{itemize}
+  \item recurrent MC $\Rightarrow\ \forall i,j,\ \mathbb P_i(N(j)=+\infty)=1$;
+  \item transient MC $\Rightarrow\ \forall i,j,\ \mathbb P_i(N(j)=+\infty)=0$.
+\end{itemize}
+
+
+\topic{7. Recurrence Equivalence Theorem (irreducible)}
+\subtopic{Recurrence Equivalent:} For irreducible MC, the following are equivalent:
+\par (1) $\exists\, k,l:\ \smallsum_{n=1}^{+\infty}p^{(n)}_{kl}=+\infty$
+; (2) $\forall\, k,l:\ \smallsum_{n=1}^{+\infty}p^{(n)}_{kl}=+\infty$
+\par (3) $\exists\, k:\ f_{kk}=1\qquad \qquad \quad \;$;  (4) $\forall\, k:\ f_{kk}=1$
+\par (5) $\forall\, i,j:\ f_{ij}=1$
+\par (6) $\exists\, k,l:\mathbb P_k(N(l)=\infty)=1$ ; (7) $\forall\, k,l:\mathbb P_k(N(l)=\infty)=1$
+
+\subtopic{Non-example for:} "$\exists\, i,j:\ f_{ij}=1$" (not recurrent)\\
+Example: biased RW drift to $+\infty$ can have $f_{01}=1$ but chain transient. $e.g.: X_{n+1}=X_n+\epsilon_{n+1}$, where $\epsilon_{n+1}=+1\;w.p. 2/3$, and $\epsilon_{n+1}=-1\;w.p. 1/3$, Then $p_{00}^{(n)}=\binom{n}{n/2}(\frac{1}{3})^{n/2}(\frac{2}{3})^{n/2}$ for n is even, and 0 for n is odd.By Stitling Approx.$\sim \frac{c}{\sqrt n}(\frac{8}{9})^{n/2}<\infty$. so $f_{01}$ is recurrent but the MC is transient.
+
+\textbf{This gives:} $\exists$ an irreducible MC s.t. transient but for some i,j, $f_{ij}=1$
+
+\subtopic{Transient Equivalent:} For irreducible MC, the following are equivalent:
+\par (1) $\exists\, k,l:\ \smallsum_{n=1}^{+\infty}p^{(n)}_{kl}<+\infty$
+; (2) $\forall\, k,l:\ \smallsum_{n=1}^{+\infty}p^{(n)}_{kl}=+\infty$
+\par (3) $\exists\, k:\ f_{kk}<1\qquad \qquad \quad \;$;  (4) $\forall\, k:\ f_{kk}<1$
+\par (5) $\exists\, i,j:\ f_{ij}=1$
+\par (6) $\exists\, k,l:\mathbb P_k(N(l)=\infty)=0$ ; (7) $\forall\, k,l:\mathbb P_k(N(l)=\infty)=0$
+
+% -------------------------------------------------------------
+% ---------------------   PAGE 2     --------------------------
+% -------------------------------------------------------------
+\newpage
+\thispagestyle{empty}
+\null
+\newpage
+% -------------------------------------------------------------
+% ---------------------   PAGE 2     --------------------------
+% -------------------------------------------------------------
+
+\topic{8. Reducible MC: block form \& recurrent/transient parts}
+\subtopic{Reducible MC (finite state space):} After re-ordering states, transition matrix can be written as\\
+\vspace{2cm}
+
+Top $K$ blocks = \textbf{recurrent classes} (closed); bottom block $Q$ Impossible to go from recurrent state to transient state(Use $f$-lemma / hitting argument.)
+
+\subtopic{$f$-lemma (very exam-use):}
+If $f_{ii}=1$ (i recurrent) and $f_{ij}>0$ (i can reach j), then \textbf{j is recurrent}.\\
+
+% -----------------------------------------------------
+
+\topic{9. MC Convergence: stationary}
+\subtopic{Two common limits:}
+\par1 $\lim_{n\to\infty}\mathbb P_i(X_n=j)=\lim_{n\to\infty}p^{(n)}_{ij}$: whether in the long run, transition probability that from i to j will converge to some certain number? (*$p^{(n)}_{ij}\xrightarrow{}{\pi_j}$ usually happens when irreducible + positive recurrent + aperiodic; if periodic, the limit usually does not exist because it will oscillate)\\
+
+\par2 $\lim_{n\to\infty}\frac1n\smallsum_{t=1}^n \mathbb P_i(X_t=j)$: average probability convergence. Happens when irreducible + positive recurrent
+
+\subtopic{Stationary distribution:}
+$\pi$ is a \textbf{stationary distribution} for $P$: if $\pi \text{ is a prob. distribution},\qquad \pi=\pi P$,
+
+equivalently: $\pi_j=\smallsum_{i\in S}\pi_i p_{ij}$ for all $j$.
+
+\subtopic{Stationary measure (relax normalization):}
+$\pi$ is a \textbf{stationary measure} if
+\begin{itemize}
+    \item $\pi(i)\ge0\ (\forall i),\ \pi\neq 0, \smallsum_{i\in S}\pi(i)\ \text{can be }+\infty$
+    \item $\pi=\pi P.$
+\end{itemize}
+
+
+(Useful when $|S|=\infty$: often no stationary \emph{distribution} but still a stationary \emph{measure}.)
+
+% -----------------------------------------------------
+\topic{10. Doubly stochastic $\Rightarrow$ uniform stationary}
+\subtopic{Doubly stochastic:}
+For transition matrix $P$, every row sums $=1$  ,and every column sums $=1$
+
+
+\subtopic{Fact (finite $|S|$):}
+If $P$ is doubly stochastic, then \textbf{uniform} distribution $\pi =[\frac{1}{|S|},\frac{1}{|S|},...,\frac{1}{|S|}]$ is stationary:
+
+\par (This extends to \textbf{stationary measures} when $|S|=\infty$.)
+
+\subtopic{e.g.SRW on 1D:} $\pi(i)\equiv 1 (\forall i\in S)$ is a stationary \textbf{measure}
+
+% -----------------------------------------------------
+
+\topic{11. Reversibility / Detailed balance}
+\subtopic{Reversibility:} 
+$P$ is \textbf{reversible} w.r.t. $\pi$ if\\
+$\forall i,j\in S,\qquad \pi_i p_{ij}=\pi_j p_{ji}$
+
+
+\subtopic{Fact: reversible $\Rightarrow$ stationary:}\\
+If $\pi_i p_{ij}=\pi_j p_{ji}$ for all $i,j$, then $\pi=\pi P$ \\
+\textbf{Proof:} $(\pi P)_j=\smallsum_i \pi_i p_{ij}=\smallsum_i \pi_j p_{ji}=\pi_j\smallsum_i p_{ji}=\pi_j.$
+
+\subtopic{Notice: stationary$\not\Rightarrow$ reversibility:}$\exists$ a MC with stationary $\pi$, $s.t. P$ is not reversible $w.r.t. \;\pi$\\
+$P=
+\begin{pmatrix}
+0 & p & 1-p\\
+1-p & 0 & p\\
+p & 1-p & 0\\
+\end{pmatrix}
+,\pi_i=\frac1 3 \text{ double stochastic.}
+$
+
+\subtopic{Example: biased random walk on $\mathbb Z$:}
+$X_{n+1}=X_n+\varepsilon_{n+1}$ with $\mathbb P(\varepsilon=+1)=p,\ \mathbb P(\varepsilon=-1)=1-p$.\\
+A stationary \textbf{measure}: $\pi(i)=\Bigl(\frac{p}{1-p}\Bigr)^i.$
+
+Check detailed balance between neighbors: $\pi(i)p_{i,i+1}=\Bigl(\frac{p}{1-p}\Bigr)^i p=\Bigl(\frac{p}{1-p}\Bigr)^{i+1}(1-p)=\pi(i+1)p_{i+1,i}$.
+
+\subtopic{Ehrenfest Urn Model:}
+$d$ balls, each round pick 1 ball uniformly and move it to the other box. Let $X_n=$ \# balls in Box 1 at time $n$. State space $\{0,1,\dots,d\}$.\\
+Transition probs:$p_{i,i+1}=\frac{d-i}{d},\qquad p_{i,i-1}=\frac{i}{d}$.
+
+\textbf{Guess:} $\pi(i)=\binom{d}{i}2^{-d}\;(i=0,1,\dots,d)$.
+
+
+\subtopic{Verify by detailed balance:}$\pi(i)p_{i,i+1}=\binom{d}{i}2^{-d}\frac{d-i}{d} =\binom{d}{i+1}2^{-d}\frac{i+1}{d}=\pi(i+1)p_{i+1,i}.$ So $\pi$ is stationary.
+
+% -----------------------------------------------------
+
+\topic{12. Existence \& Uniqueness of Stationary}
+\subtopic{Finite space $|S|$ always Existence:}
+If $|S|<\infty$, then \textbf{there always exists at least one} stationary distribution.
+
+\subtopic{Not necessarily unique:}
+Stationary may not unique if MC is \textbf{reducible} (e.g. multi-closed recurrent classes).
+
+\subtopic{e.g. stationary that NOT unique:}\\
+$
+P=
+\begin{pmatrix}
+    1 & 0 & 0\\
+    0 & 1 & 0\\
+    1/2 & 1/2 & 0
+\end{pmatrix}, \text{with stationary }
+\pi=[\alpha,1-\alpha,0]
+$
+
+\subtopic{Vanishing probabilities $\Rightarrow$ no stationary distribution:}
+If $\forall i,j\in S$, $\lim_{n\to +\infty}p^{(n)}_{ij}=0,$ then $\nexists$ \textbf{stationary distri}.\\
+\textbf{Proof:} Assume $\exists\; \pi$ stationary. Then $\pi=\pi P=...=\pi P^n$\\
+$\pi_j=\lim_{n\to +\infty}\smallsum_{i\in S}\pi_i p^{(n)}_{ij}=
+\smallsum_i \pi_i \lim_{n\to\infty}p^{(n)}_{ij}=0$
+so $\pi_j=0$ contradiction.\\
+\subtopic{M-test(justify $\lim \smallsum = \smallsum \lim$):}
+For an infinite matrix $\{x_{n,k}\}_{n,k\in\mathbb N}$, if
+$\forall k,\ \lim_{n\to\infty}x_{n,k}\ \text{exists},$ and 
+$\smallsum_{k=1}^\infty \sup_{n\ge1}|x_{n,k}|<\infty,$ then $\lim_{n\to\infty}\smallsum_{k=1}^\infty x_{n,k} =
+\smallsum_{k=1}^\infty \lim_{n\to\infty}x_{n,k}.$
+
+
+\textbf{Verify M-test condition here:}
+Take $x_{n,i}:=\pi_i p^{(n)}_{ij}\ge 0$. Then
+$\smallsum_{i\in S}\sup_{n\ge1}|\pi_i p^{(n)}_{ij}|
+\le \smallsum_{i\in S}\pi_i=1.$
+So the interchange is justified for a \textbf{stationary distribution}.
+
+\subtopic{Finite state remark:}
+If $|S|<\infty$, then $\smallsum_j p^{(n)}_{ij}=1$ so $p^{(n)}_{ij}$ \textbf{cannot} all $\to 0$ for fixed $i$.
+
+% -----------------------------------------------------
+
+\subtopic{Vanishing lemma:}\\
+If $k\to i$, $j\to \ell$, $\lim_{n\to\infty}p^{(n)}_{k\ell}=0,$
+then $\lim_{n\to\infty}p^{(n)}_{ij}=0.$
+
+
+\textbf{Proof:}
+Choose $m,r$ such that $p^{(m)}_{ki}>0$ and $p^{(r)}_{j\ell}>0$. Then by C-K equation,
+$p^{(n+m+r)}_{k\ell}
+=
+\smallsum_{a,b} p^{(m)}_{ka}\,p^{(n)}_{ab}\,p^{(r)}_{b\ell}
+\ \ge\ 
+p^{(m)}_{ki}\,p^{(n)}_{ij}\,p^{(r)}_{j\ell}.$ Since LHS $\to 0$ and the fixed factors $p^{(m)}_{ki},p^{(r)}_{j\ell}>0$,
+must have $p^{(n)}_{ij}\to 0$.
+
+\subtopic{Corollary (irreducible + one pair vanishes):}
+For an \textbf{irreducible} MC, if $\exists\, k,\ell\in S$ such that $\lim_{n\to\infty} p^{(n)}_{k\ell}=0$,
+then \textbf{no stationary distribution exists}.\\
+(Reason: by “vanishing lemma” this forces $p^{(n)}_{ij}\to0$ for all $i,j$, then apply vanishing-probabilities theorem.)
+
+\subtopic{Corollary (transient + irreducible $\not\Rightarrow$ stationary):}\\
+A transient, irreducible MC does NOT have a stationary distribution.\\
+Transient $\iff \smallsum_{i=1}^{+\infty}p_{ij}^{(n)}<\infty\implies p_{ij}^{(n)}\xrightarrow{}{0}$ 
+
+
+\subtopic{Corollary (“vanishing together” dichotomy):}
+For an \textbf{irreducible} MC, exactly one of the following holds:
+\begin{itemize}
+  \item[(i)] \textbf{(All vanish)} $\forall i,j\in S,\ \lim_{n\to\infty} p^{(n)}_{ij}=0$.
+  \item[(ii)] \textbf{(None vanish)} $\forall i,j\in S,\ \lim_{n\to\infty} p^{(n)}_{ij}\neq 0$.
+\end{itemize}
+\textbf{Note:} In case (ii), the limit $\lim_{n\to\infty}p^{(n)}_{ij}$ may \textbf{not exist} (periodicity/oscillation):
+Deterministic cycle $1\to2\to3\to1$.
+$
+P=
+\begin{pmatrix}
+    0 & 1& 0\\
+    0 & 0& 1\\
+    1 & 0& 0
+\end{pmatrix}
+$
+Then $p^{(n)}_{11}=
+\begin{cases}
+1, & \frac n 3\in \mathbb Z,\\
+0, & \frac n 3 \not\in \mathbb Z.
+\end{cases}$
+
+so $\lim_{n\to\infty}p^{(n)}_{11}$ does not exist. But time-average converges (smoothing): $\frac1n\smallsum_{t=1}^n p^{(t)}_{11}\ \longrightarrow\ \frac13
+\quad \text{for the 3-cycle.}$
+
+\textbf{Exam-use intuition:} periodic chains break pointwise limits, but Ces\`aro/time averages can converge.
+
+% -----------------------------------------------------
+\topic{13. Periodic \& Aperiodicity}
+\subtopic{Definition (period of a state):}
+For a state $i\in S$, define the set of return times $\mathcal N(i):=\{n\ge 1:\ p^{(n)}_{ii}>0\}.$
+The \textbf{period} of $i$ is gcd of $\mathcal N(i),\;i.e. d(i):=\gcd \mathcal \{n\ge 1:\ p^{(n)}_{ii}>0\}.
+
+
+\subtopic{Examples:}
+\par (1) For the 3-cycle above, $d(i)=3$ for every state.
+\par (2) If a state i has period $t$, and $p_{ii}^{(m)}>0$, then $m$ must = $at$ for some a.
+\par (3) If $p_{ii}>0$, then $1\in\mathcal N(i)$ hence $d(i)=1$.
+\par (4) If $p_{ii}^{(n)}>0$, and $p_{ii}^{(n+1)}>0$ then the period = 1.
+
+
+\subtopic{Aperiodic:}
+State $i$ is \textbf{aperiodic} $\iff i\text{ has period 1}$.\\
+For a MC, if every state has period 1, we say it is aperiodic.\\
+(For irreducible MC, either all states aperiodic or none.)
+
+\subtopic{Equial Period Lemma:}
+If $i\leftrightarrow j$ (i communicates with j), then i, j has same period, that is $d(i)=d(j).$
+
+\textbf{Corollary:} If the MC is irreducible, then \textbf{all states have the same period}.
+
+\subtopic{Proof sketch:}
+Assume $i\to j$ and $j\to i$. Then $\exists\, r,s$ such that $p^{(r)}_{ij}>0,\quad p^{(s)}_{ji}>0.$ by CK: \\
+$p^{(r+n+s)}_{ii}\ \ge\ p^{(r)}_{ij}\,p^{(n)}_{jj}\,p^{(s)}_{ji}\ >\ 0;\;p^{(r+s)}_{ii}\ \ge\ p^{(r)}_{ij}\,p^{(s)}_{ji}\ >\ 0,$
+Let $d_i, d_j$be period of $i,j$.
+so $\frac {r+n+s}{d_i} \in \mathbb Z, \frac {r+s}{d_i} \in \mathbb Z$.
+Thus $\frac {n}{d_i} \in \mathbb Z,\forall n$ so $t_i\;|\;n$, and $p_{jj}^{(n)}>0,t_j \text{ is }\gcd.$ So $t_i \;|\; t_j$; \\
+And by symmetric, $t_j$ | $t_i$ so i and j are equal period.
+
+% =====================================================
+% =====================================================
+% Continue: Convergence to stationary (ergodic thm) via Coupling/Forgetting
+% Paste inside \begin{multicols}{4} ... \end{multicols}
+% =====================================================
+\topic{14. When does $p^{(n)}_{ij}\to \pi_j$ hold?}
+\subtopic{Recall: convergence can fail if:}
+\begin{itemize}
+  \item \textbf{reducible} (multiple closed $\Rightarrow$ no single limit),
+  \item \textbf{periodic} (oscillation $\Rightarrow$ limit may not exist),
+  \item \textbf{no stationary distribution} (e.g. infinite-state transient/null recurrent $\Rightarrow$ $p^{(n)}_{ij}\to0$).
+\end{itemize}
+
+\subtopic{Main Stationary Theorem:}
+If $P$ is \textbf{irreducible}, \textbf{aperiodic} and $\exists$\textbf{ stationary distribution $\pi$},
+then $\forall \;i,j\in S$, $\lim_{n\to\infty} p^{(n)}_{ij}=\pi_j.$
+
+\textbf{In particular:} $\pi$ is \textbf{unique} under these assumptions.
+
+\subtopic{Main Lemma: Markov Forgetting:}\\
+$\forall \;i,j,k\in S, \quad \lim_{n\to\infty}\bigl|p^{(n)}_{ik}-p^{(n)}_{jk}\bigr|=0$.
+
+
+
+\textbf{Interpretation:} long-run distribution of $X_n$ forgets where it started (up to total variation at single state).
+
+\textbf{Proof Idea:} coupling with joint chain: $\bar S=S\times S$:
+Let $(X^{(1)}_n)_{n\ge0}$ start from $i$ and $(X^{(2)}_n)_{n\ge0}$ start from $j$, by evolving them independently, so put them in one prob space:\\ $\bar X_n := (X^{(1)}_n,X^{(2)}_n),\qquad
+\bar p_{(a,b),(c,d)} = p_{ac}\,p_{bd}.$\\
+use a fixed state $i_0\in S$, define $\tau=\inf \{n\geq1:(X_n^{(1)},(X_n^{(2)})=(i_0, i_0)\}$, so $\tau$ is the first time two chain both arrive $i_0$ simultaneously. If $\tau=m$, then at time $m$, both chain at same position.
+
+\textit{Facts about the joint chain:}
+\begin{itemize}
+  \item If $P$ has stationary distribution $\pi$, then $\bar\pi$ defined by
+$\bar\pi_{(a,b)}=\pi_a\pi_b$ is stationary for $\bar P$.
+  \item If $P$ is irreducible \& aperiodic, then the joint chain is irreducible (and aperiodic; see below).
+\end{itemize}
+
+% -----------------------------------------------------
+\subtopic{Lemma@ (eventual return positivity):}\\
+If state $i$ is \textbf{aperiodic} and $f_{ii}>0$, then $\exists\, n_0(i)\in\mathbb N$ such that $\forall n\ge n_0(i),\quad p^{(n)}_{ii}>0$.
+
+\subtopic{Corollary@ (eventual positivity between two states):}\\
+If $P$ is \textbf{irreducible \& aperiodic}, then for all $i,j\in S$,\\
+$\exists\, n_0(i,j)\ \text{s.t. }\ \forall n\ge n_0(i,j),\quad p^{(n)}_{ij}>0.$
+
+\textbf{Quick proof:} pick $r$ with $p^{(r)}_{ij}>0$ (irreducible). For large $n$,
+$p^{(n+r)}_{ij}\ge p^{(r)}_{ij}p^{(n)}_{jj}$ and $p^{(n)}_{jj}>0$ eventually by lemma@. Let $n_0(i,j)=r+n_0(j)$.
+
+\subtopic{For joint chain:} $\bar S$, WTS: $\bar p^{(n)}_{(i,j),(k,\ell)} = p^{(n)}_{ik}\,p^{(n)}_{j\ell}>0$ for sufficient large $n$, where $n\geq\max\{n_0(i,k), n_0(j,l)\}$ for all large $n$. Therefore joint chain is irreducible \& aperiodic.
+\subtopic{Key step: joint chain has stationary $\bar\pi$ $\Rightarrow$ recurrence:}
+(For countable MC: existence of stationary \emph{distribution} implies positive recurrence of that class.) Thus starting from any $(i,j)$, the joint chain hits any fixed state $(i_0,i_0)$ in finite time w.p.1.
+
+\topic{Proof of Markov Forgetting Lemma}
+Start from $(i,j) \in \bar S$, pick any $i_0 \in S$. Define: $\tau := \inf\{n\ge 1:\ (X^{(1)}_n,X^{(2)}_n)=(i_0,i_0).$Then $\tau<\infty$ w.p.1 (recurrence).
+\begin{align*}
+&\;p_{ik}^{(n)}
+=\mathbb P_{(i,j)}(X_n^{(1)}=k)    =\smallsum_{m=1}^{+\infty}\mathbb P_{(i,j)}(X_n^{(1)}=k,\tau=m)\\
+&=\sum_{m=1}^{n}\mathbb P_{(i,j)}(X_n^{(1)}=k,\tau=n)+\sum_{m=n+1}^{+\infty}\mathbb P_{(i,j)}(X_n^{(1)}=k,\tau=m)
+\end{align*}
+\vspace{6cm}
+
+\subtopic{Why we need $\exists\,\pi$:}
+For some chains, forgetting can hold but $p^{(n)}_{ik}\to 0$ (no stationary distribution).\\
+\textbf{Non-Example:} 1-D lazy SRW on $\mathbb Z$:
+\[
+X_{n+1}=
+\begin{cases}
+X_n+1, & \text{w.p. } \tfrac14,\\
+X_n-1, & \text{w.p. } \tfrac14,\\
+X_n, & \text{w.p. } \tfrac12.
+\end{cases}
+\]
+Irreducible \& aperiodic; joint chain recurrent $\Rightarrow$ forgetting, but still $\lim_{n\to\infty}p^{(n)}_{ik}=0 \quad (\text{no stationary distribution}).$
+
+So to get $p^{(n)}_{ij}\to\pi_j$, must assume $\exists$ stationary distribution (positive recurrence).
+
+\subtopic{Main inequality (compare start $i$ vs start $\pi$):}
+Assume $\pi$ stationary. Then for any $i,j$,
+\[
+\bigl|p^{(n)}_{ij}-\pi_j\bigr|
+=
+\Bigl|p^{(n)}_{ij}-\smallsum_{k\in S}\pi_k p^{(n)}_{kj}\Bigr|
+\le
+\smallsum_{k\in S}\pi_k\bigl|p^{(n)}_{ij}-p^{(n)}_{kj}\bigr|.
+\]
+By forgetting lemma, for each fixed $k$,
+$\bigl|p^{(n)}_{ij}-p^{(n)}_{kj}\bigr|\to 0$.
+
+\subtopic{Justify exchanging $\lim$ and $\sum$ (M-test):}
+\[
+\smallsum_{k\in S}\pi_k\sup_{n\ge0}\bigl|p^{(n)}_{ij}-p^{(n)}_{kj}\bigr|
+\le
+\smallsum_{k\in S}\pi_k\cdot 1
+=
+1<\infty.
+\]
+Hence
+\[
+\lim_{n\to\infty}\smallsum_{k\in S}\pi_k\bigl|p^{(n)}_{ij}-p^{(n)}_{kj}\bigr|
+=
+\smallsum_{k\in S}\pi_k\lim_{n\to\infty}\bigl|p^{(n)}_{ij}-p^{(n)}_{kj}\bigr|
+=0,
+\]
+so
+\[
+\lim_{n\to\infty}\bigl|p^{(n)}_{ij}-\pi_j\bigr|=0.
+\]
+
+\subtopic{General initial distribution $\nu$:}
+If $X_0\sim \nu$, then
+\[
+\mathbb P(X_n=j)=\smallsum_{i\in S}\nu_i p^{(n)}_{ij}\ \longrightarrow\ \pi_j.
+\]
+
+
+\newpage
+% =========================================================
+% ======  Periodicity / Convergence / Markov forgetting ===
+% =========================================================
+\topic{Periodic MC}
+\subtopic{Theorem: Periodic MC stationary convergence:}\\
+If $P$ is \textbf{irreducible}, has \textbf{period} $b\ge 2$, and has a stationary distribution $\pi$.
+Then for all $i,j\in S$,
+\[
+\lim_{n\to\infty}\frac1b\Big(p^{(n)}_{ij}+p^{(n+1)}_{ij}+\cdots+p^{(n+b-1)}_{ij}\Big)=\pi_j.
+\]
+\textit{Key word: cyclic decomposition.} There exists a partition
+$S=S_0\sqcup S_1\sqcup\cdots\sqcup S_{b-1},\qquad
+X_n\ \text{moves } S_r\to S_{r+1\ (\mathrm{mod}\ b)}$.
+
+Moreover (under stationary $\pi$):\\
+$\pi(S_0)=\pi(S_1)=\cdots=\pi(S_{b-1})=\frac1b$.
+
+\textbf{Key obs:} $P^b$ is a MC on $S_i$ for each $i$ is an irreducible \& aperiodic $\exists$ stationary.
+so it converges on each class; averaging over one full cycle removes oscillation.
+
+
+\subtopic{Time-average convergence (always the safe one)}:\\
+If $P$ is \textbf{irreducible} and $\exists$ a stationary distribution $\pi$, then:\\
+\[
+\forall\;i,j\in S:\;
+\lim_{n\to\infty}\frac1n\sum_{m=1}^n p^{(m)}_{ij}=\pi_j.
+\]
+(Also implies \textbf{uniqueness} of $\pi$ under irreducibility.)
+\textit{Use this when periodicity makes $p^{(n)}_{ij}$ not converge.}
+
+\subtopic{Recall: Stationary distribution vs stationary measure}
+\textbf{Stationary distribution:} $\pi$ is a probability distribution and $\pi=\pi P$. $\pi_j=\smallsum_{i\in S}\pi_i p_{ij},\qquad \smallsum_{j\in S}\pi_j=1.$
+
+\textbf{Stationary measure:} $\mu\ge 0$, $\mu\neq 0$, and $\mu=\mu P$; may have $\smallsum_j\mu(j)=\infty$.
+(Useful on infinite state spaces.)
+
+
+\subtopic{When does a stationary measure becomes a stationary distribution?} (\textbf{Answer is Positive Recurrent})\\
+Let $T_i=\inf\{n\ge 1:\ X_n=i\}$ (hitting time of state $i$).
+\par $*$ $i$ \textbf{recurrent}$\iff$ $\mathbb P_i(T_i<\infty)=1$
+\par $*$ $i$ $\textbf{positive recurrent}\iff \mathbb E_i[T_i]<\infty$
+\par $*$ $i$ $\textbf{null recurrent}\iff \mathbb P_i(T_i<\infty)=1\ \text{but}\ \mathbb E_i[T_i]=\infty.$
+
+
+\subtopic{Recurrence is sufficient for $\exists$ a stationary measure:}
+\subtopic{Step1: Construction of stationary measure under recurrence}
+\subtopic{Theorem:} Fix $i_0\in S$. If $P$ is \textbf{irreducible \& recurrent},$\forall j\in S$:
+\[
+\mu_{i_0}(j):=\sum_{n=0}^\infty \mathbb P_{i_0}\big(X_n=j,\ T_{i_0}>n\big).
+\]
+Where: $\mu_{i_0}(j)=\mathbb E_{i_0}\big[\#\text{visits to }j\ \text{in}\ \{0,1,\dots,T_{i_0}-1\}\big].$
+
+Then $\mu_{i_0}$ is \textbf{positive} and \textbf{finite on each state}, and is a \textbf{stationary measure}: $\mu_{i_0}=\mu_{i_0}P.$
+
+Quick stationarity check (shift-invariance of visit counts):
+\[
+(\mu_{i_0}P)(j)=\mathbb E_{i_0}\big[\#\text{visits to }j\ \text{during}\ \{1,2,\dots,T_{i_0}\}\big]
+=\mu_{i_0}(j).
+\]
+
+\textbf{Finiteness:}We know $\mu_{i_0}(i_0)=1<+\infty$. For $j \in S, j\neq i_0$, by stationary: $1=\mu_{i_0}(i_0)=\sum_{j\in S}\mu_{i_0}(j)\,p^{(n)}_{j i_0}.$\\
+By irreducibility, for each fixed $j$ there exists $n$ with $p^{(n)}_{j i_0}>0$, hence $\mu_{i_0}(j)\le \frac{1}{p^{(n)}_{j,i_0}}<+\infty.$
+ 
+\textbf{Positivity:} By Hit-Lemma:\\
+$\mu_{i_0}(j) \geq \mathbb P_{i_0}(\text{visit }j \text{ before returning to }i_0)>0$
+
+\textbf{Remark:} There exist transient chains with stationary measures
+(e.g. biased random walk), not through construction.
+
+
+\subtopic{Step 2: when does $\mu$ become a stat distri?}
+
+\[
+\sum_{j\in S}\mu_i(j)=\sum_{j\in S}\sum_{n=0}^{+\infty} \mathbb P_i(X_n=j,\ T_i>n)
+=\sum_{n=0}^\infty \mathbb P_i(T_i>n)=\mathbb E_i[T_i].
+\]
+Immediately: when $\mathbb E_i[T_i]<+\infty$ (positive recurrent)
+\[
+\mathbb E_i[T_i]<\infty\
+\ \Longrightarrow\
+\hat\pi(j):=\frac{\mu_i(j)}{\mathbb E_i[T_i]}
+\ \text{is a stationary distribution}.
+\]
+If $\mathbb E_i[T_i]=\infty$ (null recurrent), then $\sum_j\mu_i(j)=\infty$ so \textbf{no stationary distribution}.
+
+\subtopic{Structural properties (irreducible chains)}\\
+\par $*$ If $i\leftrightarrow j$ and $i$ is positive recurrent, then $j$ is positive recurrent.
+\par $*$ If $P$ is irreducible, $i\in S$ is positive recurrent, then all states are positive recurrent, and \textbf{exists a stationary distribution}
+\par $*$ $i\in S$ is \textbf{null recurrent} is $\mathbb E_i[T_i]=+\infty$. We can show that \textbf{null recurrent does not have a stationary distribution}.
+
+\vspace{3cm}
+
+\topic{From Stationary to $\mathbb E_i[T_i]$}
+\subtopic{Theorem: Number of returns  (linking $\pi$ and $\mathbb E_i[T_i]$)}\\
+Suppose $P$ is irreducible and recurrent,
+\[
+\text{Let } N_n(i):=\sum_{t=1}^n \mathbf 1\{X_t=i\}, \text{ then }\frac{N_n(i)}{n}\xrightarrow{a.s.}\frac{1}{\mathbb E_i[T_i]}.
+\]
+
+Remark:
+\begin{itemize}
+    \item $\mathbb E_i[T_i]=\infty\iff \frac{N_n(i)}{n}\to 0\quad(\text{null recurrent})$
+    \item $\mathbb E_i[T_i]<\infty\iff \frac{N_n(i)}{n}\to \frac{1}{\mathbb E_i[T_i]}>0\quad(\text{pos. rec.})$
+\end{itemize}
+
+\subtopic{Theorem: $\Big[\frac{N_n(i)}{n}\Big]$ convergence:}
+By MC convergence theorem, If $\exists$ a stationary distribution $\pi$ exists, then by MC convergence / time average,
+\[
+\mathbb E\Big[\frac{N_n(i)}{n}\Big]=\frac1n\sum_{t=1}^n p_{j,t}^{(t)}\to \pi_i,
+\]
+and combining implies (positive recurrent case):
+\begin{itemize}
+    \item SLLN version of MC convergence;
+    \item $\boxed{\ \pi_i=\frac{1}{\mathbb E_i[T_i]}\ }.$
+    \item $\exists$a stationary measure $\Rightarrow$ positive recurrent
+\end{itemize}
+
+\vspace{10cm}
+\topic{Appendix}
+\subtopic{Sequence Convergence}: If $|r|<1$, then:\\ 
+\begin{itemize}
+    \item $\sum_{n=0}^{+\infty}r^n=\frac{1}{1-r} \qquad \text{(Geometric)}$
+    \item $\sum_{n=1}^{+\infty}r^n=\frac{r}{1-r}$
+    \item $\sum_{n=0}^{+\infty}n \cdot r^n=\frac{r}{(1-r)^2}$
+    \item $\sum_{n=0}^{+\infty}n^2 \cdot r^n=\frac{r(1-r)}{(1-r)^3}$
+\end{itemize}
+For finite sum:
+\begin{itemize}
+    \item $\sum_{k=0}^{n-1}r^k=\frac{1-r^k}{1-r}\xrightarrow{n\xrightarrow[]{}+\infty}\frac{r}{1-r}$
+\end{itemize}
+This is used in: $\mathbb E$[visit times] = $1+f_{ii}+f_{ii}^2+...=\frac{1}{1-f_{ii}}$
+
+\subtopic{Recursion:}\\
+\textbf{Telescope:}\\
+\begin{itemize}
+    \item $\sum_{k=m}^{n}(a_k-a_{k-1})=a_n-a_{m-1}$
+    \item Since $\frac{1}{k(k+1)}=\frac{1}{k}-\frac{1}{k+1}$, we have:\\
+    (A) $\sum_{k=1}^{n}\frac{1}{k(k+1)}=1-\frac{1}{n+1}$.\\
+    (B)general form: $\frac{1}{(k+a)(k+b)}=\frac{1}{b-a}(\frac{1}{k+a}-\frac{1}{k+b})$
+\end{itemize}
+
+\textbf{Linear Recursion:}\\
+\par $(*)$ \textbf{form like:}  $x_{n+1}=a\cdot x_n+b$:
+\begin{itemize}
+    \item if $a\neq1:x_n=a^nx_0+b\frac{1-a^n}{1-a}$
+    \item if $a=1:x_n=x_0+nb$
+    \item if $|a|<1$, then $\lim x_n \xrightarrow{}\frac{b}{1-a}$
+\end{itemize}
+
+\par $(*)$ \textbf{form like:}  $x_{n+1}=a_n\cdot x_n+b_n$:\\
+\begin{itemize}
+    \item Let $A_n=\prod_{j=0}^{n-1} a_j \qquad (A_0=1)$, Then\\ $x_n = A_n x_0 + \sum_{k=0}^{n-1}\left(\frac{A_n}{A_{k+1}}\right)b_k $.
+\end{itemize}
+
+
+\subtopic{Random Walk Hitting Probability}
+\textbf{In 1D (gambler's ruin type), the hitting probability $u_i$ often satisfies:}\\ 
+\par $(*)$ \textbf{form like:} $u_i = p\,u_{i+1} + q\,u_{i-1}, \qquad (p+q=1)$
+
+with boundary conditions (e.g.$u_0=0,\; u_N=1$)
+\begin{itemize}
+  \item If $p\neq q$:
+    $ u_i=\frac{1-(q/p)^i}{1-(q/p)^N}$.
+
+  \item If $p=q=\tfrac12$: $u_i=\frac{i}{N}.$
+
+\end{itemize}
+
+\emph{where:} $u_i=\mathbb P_i(T_N<T_0)$ (hit $N$ before $0$).
+\vspace{10cm}
+
+% =========================
+% Markov Chains: Matrix / Spectral Toolbox (Finite State)
+% =========================
+
+
+\topic{Matrix}
+\subtopic{Diagonalizable:}\\
+$P$ is diagonalizable if $P=V \Lambda V^{-1}$, where $\Lambda$ = $\text{diag}[.....]$
+\subtopic{Reversibility (Detailed Balance)}\\
+$P$ reversible w.r.t. $\pi$ iff $\pi_i p_{ij}=\pi_j p_{ji}\qquad(\forall i,j).$\\
+Let $D=\mathrm{diag}(\pi_1,\pi_2,...)$.
+
+\subtopic{Key Symmetrization Trick}\\
+Define $S:=D^{1/2} P D^{-1/2}.$
+
+Using detailed balance, $S$ is symmetric:
+$S^\top=S$, since:\\
+$S_{ij}=\sqrt{\pi_i}\,p_{ij}\frac{1}{\sqrt{\pi_j}}
+      =\sqrt{\pi_j}\,p_{ji}\frac{1}{\sqrt{\pi_i}}=S_{ji}.$
+
+Also $P$ is similar to $S$: $P=D^{-1/2} S D^{1/2}.$
+
+Consequences:
+\begin{itemize}\itemsep1pt
+  \item $S$ symmetric $\Rightarrow$ all eigenvalues are real and $S$ is orthogonally diagonalizable: $S=U\Lambda U^\top$.
+  \item Similarity $\Rightarrow$ $P$ has the same eigenvalues as $S$ $\Rightarrow$ eigenvalues of $P$ are real.
+  \item $P$ is diagonalizable:$P=(D^{-1/2}U)\Lambda(D^{1/2}U^{-1})$.
+\end{itemize}
+
+\subtopic{Eigenvalue Facts for Stochastic $P$ (Finite)}
+Always: $P\mathbf 1=\mathbf 1 \ \Rightarrow\ 1\text{ is an eigenvalue (right eigenvector }\mathbf 1).$
+
+Irreducible finite chain: $\text{eigenvalue }1\text{ is simple.}$
+
+Irreducible + aperiodic: $\lambda=1\text{ is the unique eigenvalue with }|\lambda|=1,
+\text{all others satisfy }|\lambda_k|<1.$
+
+(Reversible $\Rightarrow$ eigenvalues real, so $-1<\lambda_k<1$ for $k\ge2$.)
+
+\subtopic{Spectral Decomposition of $P^n$ (Reversible)}
+With $S=U\Lambda U^\top$, $P^n = D^{-1/2} U \Lambda^n U^\top D^{1/2}.$
+
+Heuristic for convergence speed (dominant nontrivial eigenvalue): $\text{error typically decays like }|\lambda_2|^n,
+\text{spectral gap } \gamma:=1-\lambda_2.$
+\subtopic{Combinatoric:}
+$\binom{n}{k}=\frac{n!}{k!(n-k)!}$
+
+\vspace{60cm}
+
+
+
+
+
+% -----------------------------------------------------
+
+\end{multicols}
+\end{document}
