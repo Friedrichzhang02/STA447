@@ -1,4 +1,4 @@
 # STA447
 Stochastic Process
 
-This is a record of STA447 Stochastic Process of U of T.
+This is my study note of STA447 Stochastic Process of UTSG.
